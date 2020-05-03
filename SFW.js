@@ -27,7 +27,7 @@ async function check(image_url) {
   const image = await convert(pic.data);
   const predictions = await model.classify(image);
   image.dispose()
-  console.log(predictions)
+  // console.log(predictions)
   if(predictions[0].className==="Hentai"||predictions[0].className==="Porn"||predictions[0].className==="Sexy"){
     return true
   }else{
@@ -37,7 +37,7 @@ async function check(image_url) {
 
 async function blur (image_url) {
   const pic= await axios.get(image_url,{responseType: 'arraybuffer' })
-  return sharp(pic.data).blur(5).toBuffer();
+  return sharp(pic.data).blur(9).toBuffer();
 }
 
 module.exports = {check,blur};
