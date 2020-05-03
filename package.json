@@ -1,0 +1,28 @@
+{
+  "name": "4chan_tg",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qwertyforce/4chan_tg.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/qwertyforce/4chan_tg/issues"
+  },
+  "homepage": "https://github.com/qwertyforce/4chan_tg#readme",
+  "dependencies": {
+    "@tensorflow/tfjs-node": "^1.7.4",
+    "axios": "^0.19.2",
+    "image-decode": "^1.2.2",
+    "nsfwjs": "^2.1.0",
+    "p-queue": "^6.3.0",
+    "sharp": "^0.25.2",
+    "telegraf": "^3.38.0"
+  }
+}
