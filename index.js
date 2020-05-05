@@ -3,6 +3,7 @@ const { Telegraf } = require('telegraf')
 
 const {default: PQueue} = require('p-queue');
 const queue = new PQueue({concurrency: 1,interval:5000,intervalCap:1});
+const thread_tracking_queue= new PQueue({concurrency: 1,interval:500,intervalCap:1});
 
 const bot = new Telegraf("BOT_ID")
 const CHANNEL_ID="@CHANNEL_NAME"
@@ -13,67 +14,76 @@ const format_text=require('./format_text.js')(BOARD)
 
 const ARCHIVE_URL="" //https://archive.4plebs.org/_/articles/credits/ 
 const BLUR_NSFW=true
+
 const UPDATE_REPLY_COUNTER=true
-var Visited=[];
+const MAX_TRACKED_THREADS=20;
+const TRACKED_THREADS=[]
+
+const VISITED=[];
 var last_visit=0;
 
-async function add_to_update_reply_counter(msg){
-  update_reply_counter_queue.push({
+async function add_to_tracked_threads(msg,text,thread_num){
+  if(TRACKED_THREADS.length>=MAX_TRACKED_THREADS){
+    TRACKED_THREADS.shift()
+  }
+  TRACKED_THREADS.push({
+    thread_num:thread_num,
     message_id: msg.message_id,
-    text:msg.text
+    text:text,
+    replies:0
   })
 }
-function queue_msg_send(text){
+function queue_msg_send(text,thread_num){
   queue.add(async () =>{
     const msg= await bot.telegram.sendMessage(CHANNEL_ID,text,{parse_mode:'HTML',disable_web_page_preview:true})
-    if(UPDATE_REPLY_COUNTER){add_to_update_reply_counter(msg)}
+    if(UPDATE_REPLY_COUNTER){await add_to_tracked_threads(msg,text,thread_num)}
   }).catch((error) => {
     console.log(new Date().toUTCString())
     console.log(error);
   });  
 }
 //If image/document can't be send by link, we manually upload them to the telegram servers
-function queue_doc_via_link_and_msg_send(text,doc_link){
+function queue_doc_via_link_and_msg_send(text,doc_link,thread_num){
   queue.add(async () =>{
     await bot.telegram.sendDocument(CHANNEL_ID, doc_link)
     const msg = await bot.telegram.sendMessage(CHANNEL_ID,text,{parse_mode:'HTML',disable_web_page_preview:true})
-    if(UPDATE_REPLY_COUNTER){add_to_update_reply_counter(msg)}
+    if(UPDATE_REPLY_COUNTER){ await add_to_tracked_threads(msg,text,thread_num)}
   }).catch(async (error) => {
     console.log(new Date().toUTCString())
     console.log(error);
     const img_buffer= await axios.get(doc_link,{responseType: 'arraybuffer' })
-    queue_doc_via_buffer_and_msg_send(text,img_buffer.data)
+    queue_doc_via_buffer_and_msg_send(text,img_buffer.data,thread_num)
   }); 
 }
 
-function queue_doc_via_buffer_and_msg_send(text,doc_buffer){
+function queue_doc_via_buffer_and_msg_send(text,doc_buffer,thread_num){
   queue.add(async () =>{
     await bot.telegram.sendDocument(CHANNEL_ID,{source: doc_buffer,filename: '1.gif'})
     const msg = await bot.telegram.sendMessage(CHANNEL_ID,text,{parse_mode:'HTML',disable_web_page_preview:true})
-    if(UPDATE_REPLY_COUNTER){add_to_update_reply_counter(msg)}
+    if(UPDATE_REPLY_COUNTER){ await add_to_tracked_threads(msg,text,thread_num)}
   }).catch(async (error) => {
     console.log(new Date().toUTCString())
     console.log(error);
   }); 
 }
 
-function queue_photo_via_link_and_msg_send(text,img_link){
+function queue_photo_via_link_and_msg_send(text,img_link,thread_num){
   queue.add(async () =>{
     await bot.telegram.sendPhoto(CHANNEL_ID, img_link)
     const msg = await bot.telegram.sendMessage(CHANNEL_ID,text,{parse_mode:'HTML',disable_web_page_preview:true})
-    if(UPDATE_REPLY_COUNTER){add_to_update_reply_counter(msg)}
+    if(UPDATE_REPLY_COUNTER){ await add_to_tracked_threads(msg,text,thread_num)}
    }).catch(async (error) => {
     console.log(new Date().toUTCString())
     console.log(error);
     const img_buffer= await axios.get(img_link,{responseType: 'arraybuffer' })
-    queue_photo_via_buffer_and_msg_send(text,img_buffer.data)
+    queue_photo_via_buffer_and_msg_send(text,img_buffer.data,thread_num)
   });  
 }
-function queue_photo_via_buffer_and_msg_send(text,img_buffer){
+function queue_photo_via_buffer_and_msg_send(text,img_buffer,thread_num){
   queue.add(async () =>{
     await bot.telegram.sendPhoto(CHANNEL_ID,{source: img_buffer})
     const msg = await bot.telegram.sendMessage(CHANNEL_ID,text,{parse_mode:'HTML',disable_web_page_preview:true})
-    if(UPDATE_REPLY_COUNTER){add_to_update_reply_counter(msg)}
+    if(UPDATE_REPLY_COUNTER){ await add_to_tracked_threads(msg,text,thread_num)}
    }).catch((error) => {
     console.log(new Date().toUTCString())
     console.log(error);
@@ -82,7 +92,7 @@ function queue_photo_via_buffer_and_msg_send(text,img_buffer){
 
 async function startup(){
   function make_visited(no){
-    Visited.push(no)
+    VISITED.push(no)
   }
   await get_threads(make_visited)
   console.log("startup done")
@@ -108,12 +118,12 @@ async function get_threads(fn){
 
 async function post_new_thread(thread_num) {
   try{
-    if(!Visited.includes(thread_num)){
+    if(!VISITED.includes(thread_num)){
       // console.log(thread_num)
       const posts = await axios.get(`https://a.4cdn.org/${BOARD}/thread/${thread_num}.json`,{headers: { 'If-Modified-Since':  0}})
       const first_post= posts.data.posts[0]
       // console.log(first_post);
-      Visited.push(thread_num)
+      VISITED.push(thread_num)
       // console.log("new thread")
       let text=first_post.com||''
       text=await format_text(text)
@@ -124,7 +134,7 @@ async function post_new_thread(thread_num) {
       if(first_post.ext!==undefined){ //if no picture
         const img_link=`https://i.4cdn.org/${BOARD}/${first_post.tim+first_post.ext}`
         if(first_post.ext===".gif"){
-          queue_doc_via_link_and_msg_send(text,img_link)
+          queue_doc_via_link_and_msg_send(text,img_link,thread_num)
         }else if(first_post.ext===".png"||first_post.ext===".jpg"){
           if(BLUR_NSFW){
             const thumbnail=`https://i.4cdn.org/${BOARD}/${first_post.tim}s.jpg`
@@ -136,14 +146,14 @@ async function post_new_thread(thread_num) {
             if(NSFW){
              const thumbnail=`https://i.4cdn.org/${BOARD}/${first_post.tim}s.jpg`
              const blurred_pic= await SFW.blur(thumbnail)
-             queue_photo_via_buffer_and_msg_send(text,blurred_pic)
+             queue_photo_via_buffer_and_msg_send(text,blurred_pic,thread_num)
              return
             }
           }
-          queue_photo_via_link_and_msg_send(text,img_link)
+          queue_photo_via_link_and_msg_send(text,img_link,thread_num)
         }
       }else{
-        queue_msg_send(text);  
+        queue_msg_send(text,thread_num);  
       }
     }
   }catch(error) {
@@ -151,21 +161,46 @@ async function post_new_thread(thread_num) {
   }
 }
 
-var update_reply_counter_queue=[]
+
+async function queue_check_thread(thread_num){
+  return thread_tracking_queue.add(async () =>{
+    return await axios.get(`https://a.4cdn.org/${BOARD}/thread/${thread_num}.json`,{headers: { 'If-Modified-Since':  0}}).catch((err)=>console.log(err))
+  }).catch((error) => {
+    console.log(new Date().toUTCString())
+    console.log(error);
+  });  
+}
 async function check_replies(){
-   for (const thread of update_reply_counter_queue) {
-    const posts= await axios.get(`https://a.4cdn.org/${BOARD}/thread/${thread.num}.json`,{headers: { 'If-Modified-Since':  0}})
-    const first_post= posts.data.posts[0]
-    const replies=first_post.replies
-    
+   let message_ids_to_delete=[]
+   for (const thread of TRACKED_THREADS) {
+      const posts= await queue_check_thread(thread.thread_num)
+      if(posts){
+        const first_post= posts.data.posts[0]
+        const replies=first_post.replies
+        if(replies===thread.replies){
+          continue;
+        }
+        const index=thread.text.lastIndexOf("Replies:</b>")+12
+        thread.text=thread.text.slice(0,index+1)+replies
+        thread.replies=replies
+        bot.telegram.editMessageText(CHANNEL_ID, thread.message_id,false,thread.text,{parse_mode:'HTML',disable_web_page_preview:true}).catch((err)=>console.log(err))
+      }else{
+        message_ids_to_delete.push(thread.message_id)
+      }
+   }
+   for (const id of message_ids_to_delete) {
+      const index = TRACKED_THREADS.findIndex((el)=>el.message_id===id)
+      if(index!==-1){
+        TRACKED_THREADS.splice(index,1)
+      }
    }
 }
 
-startup()
-setInterval(function(){
-   get_threads(post_new_thread)
-   if(UPDATE_REPLY_COUNTER){
-    check_replies()
-   }
- },60000);
- 
+startup().then(()=>{
+  setInterval(function(){
+    get_threads(post_new_thread)
+    if(UPDATE_REPLY_COUNTER){
+     check_replies()
+    }
+  },60000);
+})
