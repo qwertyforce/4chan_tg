@@ -164,7 +164,7 @@ async function post_new_thread(thread_num) {
 
 async function queue_check_thread(thread_num){
   return thread_tracking_queue.add(async () =>{
-    return await axios.get(`https://a.4cdn.org/${BOARD}/thread/${thread_num}.json`,{headers: { 'If-Modified-Since':  0}}).catch((err)=>console.log(err))
+    return await axios.get(`https://a.4cdn.org/${BOARD}/thread/${thread_num}.json`,{headers: { 'If-Modified-Since':  0}}).catch((err)=>console.log('thread_check_err',err.config.url))
   }).catch((error) => {
     console.log(new Date().toUTCString())
     console.log(error);
