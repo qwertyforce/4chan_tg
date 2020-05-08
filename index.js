@@ -120,7 +120,7 @@ async function post_new_thread(thread_num) {
   try{
     if(!VISITED.includes(thread_num)){
       // console.log(thread_num)
-      const posts = await axios.get(`https://a.4cdn.org/${BOARD}/thread/${thread_num}.json`,{headers: { 'If-Modified-Since':  0}})
+      const posts = await axios.get(`https://a.4cdn.org/${BOARD}/thread/${thread_num}.json`,{headers: { 'If-Modified-Since':  0}}).catch((err)=>console.log('post_new_thread_err',err.config.url))
       const first_post= posts.data.posts[0]
       // console.log(first_post);
       VISITED.push(thread_num)
