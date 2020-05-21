@@ -15,6 +15,9 @@ const format_text=require('./format_text.js')(BOARD)
 const ARCHIVE_URL="" //https://archive.4plebs.org/_/articles/credits/ 
 const BLUR_NSFW=true
 
+const webm_to_mp4=require('./webm_to_mp4.js')
+const POST_WEBMS=true
+
 const UPDATE_REPLY_COUNTER=true
 const MAX_TRACKED_THREADS=20;
 const TRACKED_THREADS=[]
@@ -59,6 +62,17 @@ function queue_doc_via_link_and_msg_send(text,doc_link,thread_num){
 function queue_doc_via_buffer_and_msg_send(text,doc_buffer,thread_num){
   queue.add(async () =>{
     await bot.telegram.sendDocument(CHANNEL_ID,{source: doc_buffer,filename: '1.gif'})
+    const msg = await bot.telegram.sendMessage(CHANNEL_ID,text,{parse_mode:'HTML',disable_web_page_preview:true})
+    if(UPDATE_REPLY_COUNTER){ await add_to_tracked_threads(msg,text,thread_num)}
+  }).catch(async (error) => {
+    console.log(new Date().toUTCString())
+    console.log(error);
+  }); 
+}
+
+function queue_video_via_buffer_and_msg_send(text,video_buffer,thread_num){
+  queue.add(async () =>{
+    await bot.telegram.sendVideo(CHANNEL_ID,{source: video_buffer,filename: '1.mp4'})
     const msg = await bot.telegram.sendMessage(CHANNEL_ID,text,{parse_mode:'HTML',disable_web_page_preview:true})
     if(UPDATE_REPLY_COUNTER){ await add_to_tracked_threads(msg,text,thread_num)}
   }).catch(async (error) => {
@@ -131,10 +145,13 @@ async function post_new_thread(thread_num) {
       if(UPDATE_REPLY_COUNTER){
         text+=`\n<b>Replies:</b> 0`
       }
-      if(first_post.ext!==undefined){ //if no picture
+      if(first_post.ext!==undefined){ //if attachment exists
         const img_link=`https://i.4cdn.org/${BOARD}/${first_post.tim+first_post.ext}`
         if(first_post.ext===".gif"){
           queue_doc_via_link_and_msg_send(text,img_link,thread_num)
+        }else if(first_post.ext===".webm" && POST_WEBMS){
+          const video_buffer=await webm_to_mp4.convert(img_link)      //in this case img_link contains video
+          queue_video_via_buffer_and_msg_send(text,video_buffer,thread_num)
         }else if(first_post.ext===".png"||first_post.ext===".jpg"){
           if(BLUR_NSFW){
             const thumbnail=`https://i.4cdn.org/${BOARD}/${first_post.tim}s.jpg`

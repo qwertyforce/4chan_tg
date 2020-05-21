@@ -17,8 +17,10 @@
   },
   "homepage": "https://github.com/qwertyforce/4chan_tg#readme",
   "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.0.20",
     "@tensorflow/tfjs-node": "^1.7.4",
     "axios": "^0.19.2",
+    "fluent-ffmpeg": "^2.1.2",
     "image-decode": "^1.2.2",
     "nsfwjs": "^2.1.0",
     "p-queue": "^6.3.0",
