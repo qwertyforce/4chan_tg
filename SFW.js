@@ -40,4 +40,21 @@ async function blur (image_url) {
   return sharp(pic.data).blur(9).toBuffer();
 }
 
-module.exports = {check,blur};
+async function resize(image_buffer) {
+  let { width, height } = decode(image_buffer)
+  let aspect_ratio = width / height
+  if (aspect_ratio > 1) {
+    width = 2500
+    height = Math.floor(2500 / aspect_ratio)
+  } else if (aspect_ratio < 1) {
+    height = 2500
+    width = Math.floor(2500 * aspect_ratio)
+  } else {
+    height = 2500
+    width = 2500
+  }
+  return sharp(image_buffer).resize({ width: width, height: height }).toBuffer()
+}
+
+
+module.exports = {check,blur,resize};

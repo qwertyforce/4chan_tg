@@ -90,17 +90,23 @@ function queue_photo_via_link_and_msg_send(text,img_link,thread_num){
     console.log(new Date().toUTCString())
     console.log(error);
     const img_buffer= await axios.get(img_link,{responseType: 'arraybuffer' })
-    queue_photo_via_buffer_and_msg_send(text,img_buffer.data,thread_num)
+    queue_photo_via_buffer_and_msg_send(text,img_buffer.data,thread_num,false)
   });  
 }
-function queue_photo_via_buffer_and_msg_send(text,img_buffer,thread_num){
+function queue_photo_via_buffer_and_msg_send(text,img_buffer,thread_num,resized){
   queue.add(async () =>{
     await bot.telegram.sendPhoto(CHANNEL_ID,{source: img_buffer})
     const msg = await bot.telegram.sendMessage(CHANNEL_ID,text,{parse_mode:'HTML',disable_web_page_preview:true})
     if(UPDATE_REPLY_COUNTER){ await add_to_tracked_threads(msg,text,thread_num)}
-   }).catch((error) => {
+   }).catch(async (error) => {
+    if(resized){console.log("error after resizing")}
     console.log(new Date().toUTCString())
     console.log(error);
+    if(resized===false&&error.description==="Bad Request: PHOTO_INVALID_DIMENSIONS"){
+      console.log("resizing big image")
+      const resized_img_buffer= await SFW.resize(img_buffer)
+      queue_photo_via_buffer_and_msg_send(text,resized_img_buffer,thread_num,true)
+    }
    });
 }
 
@@ -163,7 +169,7 @@ async function post_new_thread(thread_num) {
             if(NSFW){
              const thumbnail=`https://i.4cdn.org/${BOARD}/${first_post.tim}s.jpg`
              const blurred_pic= await SFW.blur(thumbnail)
-             queue_photo_via_buffer_and_msg_send(text,blurred_pic,thread_num)
+             queue_photo_via_buffer_and_msg_send(text,blurred_pic,thread_num,false)
              return
             }
           }
