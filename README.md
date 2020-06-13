@@ -3,5 +3,5 @@ Telegram bot that fetches new threads from 4chan board and posts them in a teleg
 Replies counter is updating for 20 last threads.
 NSFW thread pics are blurred. <br>
 Channel examples (content is still NSFW) : <br>
-[/pol/](https://t.me/pol_4_chan) <br>
+[/fit/](https://t.me/fit_4chan) <br>
 [/mlp/](https://t.me/mlp_4chan)
