@@ -112,6 +112,9 @@ function queue_photo_via_buffer_and_msg_send(text,img_buffer,thread_num,resized)
 
 async function startup(){
   function make_visited(no){
+    if(VISITED.length>=1000){
+      VISITED.shift()
+    }
     VISITED.push(no)
   }
   await get_threads(make_visited)
