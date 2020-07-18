@@ -3,7 +3,6 @@ const { Telegraf } = require('telegraf')
 
 const {default: PQueue} = require('p-queue');
 const queue = new PQueue({concurrency: 1,interval:5000,intervalCap:1});
-const thread_tracking_queue= new PQueue({concurrency: 1,interval:500,intervalCap:1});
 
 const bot = new Telegraf("BOT_ID")
 const CHANNEL_ID="@CHANNEL_NAME"
@@ -188,18 +187,10 @@ async function post_new_thread(thread_num) {
 }
 
 
-async function queue_check_thread(thread_num){
-  return thread_tracking_queue.add(async () =>{
-    return await axios.get(`https://a.4cdn.org/${BOARD}/thread/${thread_num}.json`,{headers: { 'If-Modified-Since':  0}}).catch((err)=>console.log('thread_check_err',err.config.url))
-  }).catch((error) => {
-    console.log(new Date().toUTCString())
-    console.log(error);
-  });  
-}
 async function check_replies(){
    let message_ids_to_delete=[]
    for (const thread of TRACKED_THREADS) {
-      const posts= await queue_check_thread(thread.thread_num)
+      const posts= await axios.get(`https://a.4cdn.org/${BOARD}/thread/${thread.thread_num}.json`,{headers: { 'If-Modified-Since':  0}}).catch((err)=>console.log('thread_check_err',err.config.url)) 
       if(posts){
         const first_post= posts.data.posts[0]
         const replies=first_post.replies
