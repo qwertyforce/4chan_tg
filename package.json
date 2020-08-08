@@ -22,9 +22,9 @@
     "axios": "^0.19.2",
     "fluent-ffmpeg": "^2.1.2",
     "image-decode": "^1.2.2",
-    "nsfwjs": "^2.1.0",
-    "p-queue": "^6.3.0",
-    "sharp": "^0.25.2",
+    "nsfwjs": "^2.2.0",
+    "p-queue": "^6.6.0",
+    "sharp": "^0.25.4",
     "telegraf": "^3.38.0"
   }
 }
