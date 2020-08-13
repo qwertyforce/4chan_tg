@@ -22,7 +22,7 @@ const MAX_TRACKED_THREADS=20;
 const TRACKED_THREADS=[]
 
 const VISITED=[];
-var last_visit=0;
+let LAST_VISIT=0;
 
 async function add_to_tracked_threads(msg,text,thread_num){
   if(TRACKED_THREADS.length>=MAX_TRACKED_THREADS){
@@ -123,8 +123,8 @@ async function startup(){
 
 async function get_threads(fn){
   try {
-    const threads= await axios.get(`https://a.4cdn.org/${BOARD}/threads.json`,{headers: { 'If-Modified-Since':  last_visit}})
-    last_visit= new Date().toUTCString();
+    const threads= await axios.get(`https://a.4cdn.org/${BOARD}/threads.json`,{headers: { 'If-Modified-Since':  LAST_VISIT}})
+    LAST_VISIT= new Date().toUTCString();
     for (let page of threads.data) {
       for (let thread of page.threads){
         fn(thread.no)
