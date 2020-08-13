@@ -28,6 +28,10 @@ async function add_to_tracked_threads(msg,text,thread_num){
   if(TRACKED_THREADS.length>=MAX_TRACKED_THREADS){
     TRACKED_THREADS.shift()
   }
+  console.log("===========");
+  console.log(new Date().toUTCString())
+  console.log("Thread added");
+  console.log("===========");
   TRACKED_THREADS.push({
     thread_num:thread_num,
     message_id: msg.message_id,
@@ -111,9 +115,6 @@ function queue_photo_via_buffer_and_msg_send(text,img_buffer,thread_num,resized)
 
 async function startup(){
   function make_visited(no){
-    if(VISITED.length>=1000){
-      VISITED.shift()
-    }
     VISITED.push(no)
   }
   await get_threads(make_visited)
@@ -145,6 +146,9 @@ async function post_new_thread(thread_num) {
       const posts = await axios.get(`https://a.4cdn.org/${BOARD}/thread/${thread_num}.json`,{headers: { 'If-Modified-Since':  0}}).catch((err)=>console.log('post_new_thread_err',err.config.url))
       const first_post= posts.data.posts[0]
       // console.log(first_post);
+      if(VISITED.length>=1000){
+        VISITED.shift()
+      }
       VISITED.push(thread_num)
       // console.log("new thread")
       let text=first_post.com||''
