@@ -4,7 +4,7 @@ tf.enableProdMode()
 const nsfw = require('nsfwjs')
 const sharp = require('sharp');
 const decode = require('image-decode')
-var model;
+let model;
 (async () =>
  model = await nsfw.load('file://./model/'))()
 

@@ -1,7 +1,7 @@
 const br=new RegExp("<br>", 'g')
 const remove_junk=new RegExp(`<wbr>|<span class="quote">|<span class="deadlink">|</span>`, 'g')
-var lnk;
-var BOARD;
+let lnk;
+let BOARD;
 const lnk2=new RegExp(`href="//`, 'g')
 
 async function format_text(text) {
