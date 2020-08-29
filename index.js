@@ -146,9 +146,6 @@ async function post_new_thread(thread_num) {
       const posts = await axios.get(`https://a.4cdn.org/${BOARD}/thread/${thread_num}.json`,{headers: { 'If-Modified-Since':  0}}).catch((err)=>console.log('post_new_thread_err',err.config.url))
       const first_post= posts.data.posts[0]
       // console.log(first_post);
-      if(VISITED.length>=1000){
-        VISITED.shift()
-      }
       VISITED.push(thread_num)
       // console.log("new thread")
       let text=first_post.com||''
