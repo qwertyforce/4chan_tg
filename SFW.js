@@ -6,7 +6,7 @@ const sharp = require('sharp');
 const decode = require('image-decode')
 let model;
 (async () =>
- model = await nsfw.load('file://./model/', { type: 'graph' }))()
+ model = await nsfw.load('file://./model/'))()
 
  async function convert(image) {
   const {width, height,data} = decode(image)
