@@ -19,7 +19,7 @@
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.0.20",
     "@tensorflow/tfjs-node": "^2.4.0",
-    "axios": "^0.21.1",
+    "axios": "^0.21.2",
     "fluent-ffmpeg": "^2.1.2",
     "image-decode": "^1.2.2",
     "nsfwjs": "^2.2.0",
