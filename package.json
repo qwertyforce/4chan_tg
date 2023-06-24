@@ -18,7 +18,7 @@
   "homepage": "https://github.com/qwertyforce/4chan_tg#readme",
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.0.20",
-    "@tensorflow/tfjs-node": "^2.4.0",
+    "@tensorflow/tfjs-node": "^4.8.0",
     "axios": "^0.21.2",
     "fluent-ffmpeg": "^2.1.2",
     "image-decode": "^1.2.2",
