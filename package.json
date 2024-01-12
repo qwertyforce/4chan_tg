@@ -24,7 +24,7 @@
     "image-decode": "^1.2.2",
     "nsfwjs": "^2.2.0",
     "p-queue": "^6.6.0",
-    "sharp": "^0.30.5",
+    "sharp": "^0.32.6",
     "telegraf": "^3.38.0"
   }
 }
